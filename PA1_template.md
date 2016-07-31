@@ -39,24 +39,58 @@ The code outlined below allows the user to:
 ## Setting the Environment and Loading Libraries 
 
 ### Setting the Environment
-```{r set environment}
+
+```r
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE, warning = FALSE, results = TRUE)
 options(digits = 2, scipen = 999)
 ```
 
 ### Loading Libraries
-```{r libraries}
+
+```r
 library(knitr)
 library(ggplot2)
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(lubridate)
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+```
+
+```
+## The following object is masked from 'package:base':
+## 
+##     date
 ```
 
 
 ## Loading and Preprocessing the Data
 
 ### Loading the Data
-```{r data loading}
+
+```r
 if(!file.exists("activity.csv")){
         unzip("activity.zip")
 }
@@ -67,24 +101,54 @@ rawactivityData <- read.csv("activity.csv", header = TRUE, stringsAsFactors = FA
 ### Preprocessing the Data
 
 #### Looking at Structure of Data
-```{r structure}
+
+```r
 str(rawactivityData)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : chr  "2012-10-01" "2012-10-01" "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
+```r
 head(rawactivityData)
 ```
 
+```
+##   steps       date interval
+## 1    NA 2012-10-01        0
+## 2    NA 2012-10-01        5
+## 3    NA 2012-10-01       10
+## 4    NA 2012-10-01       15
+## 5    NA 2012-10-01       20
+## 6    NA 2012-10-01       25
+```
+
 #### Formatting Dates Correctly
-```{r fixing dates}
+
+```r
 actData <- rawactivityData
 actData$date <- ymd(actData$date)
 
 str(actData)
 ```
 
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
+
 
 ## What is the Mean Total Number of Steps Taken Per Day?
 
 ### Histogram of the Total Number of Steps Taken Each Day (Excluding NAs)
-```{r steps histogram}
+
+```r
 stepsPerDay <- actData %>% 
         filter(!is.na(steps)) %>%
         group_by(date) %>%
@@ -95,19 +159,23 @@ ggplot(stepsPerDay, aes(x = steps)) +
         labs(title = "Total Steps Per Day", x = "Steps Per Day", y = "Frequency")
 ```
 
+![plot of chunk steps histogram](figure/steps histogram-1.png)
+
 ### Mean and Median Total Number of Steps Taken Per Day (Excluding NAs)
-```{r mean and median}
+
+```r
 stepsMean <- mean(stepsPerDay$steps, na.rm = TRUE)
 stepsMedian <- median(stepsPerDay$steps, na.rm = TRUE)
 ```
 
-The mean total number of steps taken per day is equal to `r stepsMean`, while the median number of steps take per day is equal to `r stepsMedian`.
+The mean total number of steps taken per day is equal to 10766.19, while the median number of steps take per day is equal to 10765.
 
 
 ## What is the Average Daily Activity Pattern? (Excluding NAs)
 
 ### Time Series Plot 
-```{r time series}
+
+```r
 actDailyInt <- actData %>%
         filter(!is.na(steps)) %>%
         group_by(interval) %>%
@@ -118,26 +186,31 @@ ggplot(actDailyInt, aes(x = interval, y = steps)) +
         labs (title = "Daily Activity Pattern", x = "5 Minute Interval", y = "Average Number of Steps")
 ```
 
+![plot of chunk time series](figure/time series-1.png)
+
 ### Interval With Maximum Number of Steps Across All Days
-```{r max steps}
+
+```r
 MaxAvg <- max(actDailyInt$steps)
 Interval_MaxAvg <- actDailyInt$interval[actDailyInt$steps == MaxAvg]
 ```
 
-The max average number of steps occurs at interval `r Interval_MaxAvg` and is equal to `r MaxAvg`.
+The max average number of steps occurs at interval 835 and is equal to 206.17.
 
 
 ## Imputing Missing Values
 
 ### Total Number of Missing Values (coded as NA)
-```{r missing values}
+
+```r
 MissingValues <- sum(is.na(actData))
 ```
 
-The total number of missing values is equal to `r MissingValues`.
+The total number of missing values is equal to 2304.
 
 ### New Dataset Including Imputed Values for NAs
-```{r imputed dataset}
+
+```r
 actData2 <- actData
 actData2NA <- is.na(actData2$steps)
 MeanInterval <- tapply(actData2$steps, actData2$interval, mean, na.rm = TRUE, simplify = TRUE)
@@ -146,10 +219,11 @@ actData2$steps[actData2NA] <- MeanInterval[as.character(actData2$interval[actDat
 NewMissingValues <- sum(is.na(actData2$steps))
 ```
 
-After imputing the average number of steps per 5 minute interval the number of missing values equals `r NewMissingValues`.
+After imputing the average number of steps per 5 minute interval the number of missing values equals 0.
 
 ### Histogram Of Imputed Dataset and Comparison to Original Histogram
-```{r}
+
+```r
 stepsPerDay2 <- actData2 %>%
         group_by(date) %>%
         summarize(steps = sum(steps))
@@ -166,34 +240,48 @@ ggplot() +
         labs(title = "Total Steps Per Day (Comparison)", x = "Steps Per Day", y = "Frequency")
 ```
 
+![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1-1.png)
+
 ### Imputed Data Mean and Median Total Number of Steps Taken Per Day
-```{r}
+
+```r
 stepsMeanI <- mean(stepsPerDay2$steps)
 stepsMedianI <- median(stepsPerDay2$steps)
 ```
 
-The mean total number of steps taken per day for the imputed data equals `r stepsMeanI`; the median total number of steps taken per day for the imputed data also equals `r stepsMedianI`.
+The mean total number of steps taken per day for the imputed data equals 10766.19; the median total number of steps taken per day for the imputed data also equals 10766.19.
 
 ### Differences between the Non-Imputed and Imputed Data
-```{r}
+
+```r
 meandiff <- mean(stepsPerDay2$steps)-mean(stepsPerDay$steps)
 mediandiff <- median(stepsPerDay2$steps)-median(stepsPerDay$steps)
 totaldiff <- sum(stepsPerDay2$steps)-sum(stepsPerDay$steps)
 ```
 
-Given the inclusion of imputed values the difference in mean total number of steps per day is `r meandiff`, the difference in median total number of steps per day is `r mediandiff`, and the difference in the total number of steps is `r totaldiff`.
+Given the inclusion of imputed values the difference in mean total number of steps per day is 0, the difference in median total number of steps per day is 1.19, and the difference in the total number of steps is 86129.51.
 
 ## Are there Difference in Activity Patterns Between Weekdays and Weekends?
 
 ### Creating Day Classification Factor Variable
-```{r}
+
+```r
 actData2$DayType <- weekdays(actData2$date)
 actData2$DayType <- ifelse(actData2$DayType == "Saturday"| actData2$DayType == "Sunday", "Weekend", "Weekday")
 str(actData2)
 ```
 
+```
+## 'data.frame':	17568 obs. of  4 variables:
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+##  $ date    : Date, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ DayType : chr  "Weekday" "Weekday" "Weekday" "Weekday" ...
+```
+
 ### Time Series Panel Plot Comparing Weekdays and Weekends 
-```{r}
+
+```r
 WeekData <- actData2 %>%
         group_by(interval, DayType) %>%
         summarize(steps = mean(steps))
@@ -204,3 +292,5 @@ g <- ggplot(WeekData, aes(x = interval, y = steps, color = DayType)) +
         labs(title = "Comparison of Weekend and Weekday Avg Steps", x = "5 Minute Interval", y = "Number of Steps")
 print(g)
 ```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5-1.png)
